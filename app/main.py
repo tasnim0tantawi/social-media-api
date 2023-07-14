@@ -28,6 +28,15 @@ def get_posts():
         "data": posts
     }
 
+@app.get("/posts/{id}")
+def get_post(id: int):
+    post = search_post(id)
+    if post is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found.")
+    return {
+        "data": post
+    }
+
 @app.post("/posts")
 def create_post(post: Post):
     posts.append(post.model_dump())
@@ -48,28 +57,11 @@ def update_post(id: int, post: Post):
     }
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id):
+def delete_post(id: int):
     post_index = search_post_index(id)
     if post_index is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found.")
-    del posts[post_index]
-    return {
-        "message": "Post deleted successfully.",
-        "data": posts
-    }
+    posts.pop(post_index)
 
-
-
-    
-
-
-@app.put("/posts/{id}", status_code=status.HTTP_200_OK)
-def update_post(id: int):
-    pass
-
-
-@app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id):
-    pass
 
 
