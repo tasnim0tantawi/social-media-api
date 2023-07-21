@@ -9,3 +9,11 @@ SQLALCHEMY_DATABASE_URL = f"postgresql://postgres:{db_password}@localhost/{db_na
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

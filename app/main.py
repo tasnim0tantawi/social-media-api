@@ -7,20 +7,15 @@ from psycopg2.extras import RealDictCursor
 import time
 from . secret import db_password, db_name
 from . import models
-from . database import engine, SessionLocal
+from . database import engine, get_db
+from sqlalchemy.orm import Session
+# import Depends
+from fastapi import Depends
+
 
 
 
 models.Base.metadata.create_all(bind=engine)
-
-# Dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 
 app = FastAPI()
 
@@ -52,7 +47,7 @@ def root():
 
 # Getting all posts, a best practice is to name the route /posts with an s at the end.
 @app.get("/posts")
-def get_posts():
+def get_posts(db: Session = Depends(get_db)):
     cursor.execute("SELECT * FROM posts")
     posts = cursor.fetchall()
     return {
@@ -60,7 +55,7 @@ def get_posts():
     }
 
 @app.get("/posts/{id}")
-def get_post(id: int):
+def get_post(id: int, db: Session = Depends(get_db)):
     cursor.execute("SELECT * FROM posts  WHERE id = %s", (str(id),))
     post = cursor.fetchone()
 
@@ -71,7 +66,7 @@ def get_post(id: int):
     }
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_post(post: Post):
+def create_post(post: Post, db: Session = Depends(get_db)):
     cursor.execute("INSERT INTO posts (title, content) VALUES (%s, %s) RETURNING *", (post.title, post.content))
     post = cursor.fetchone()
     connection.commit()
