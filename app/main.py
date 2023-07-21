@@ -5,6 +5,7 @@ from app.dummy import all_posts, search_post, search_post_index
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
+from . secret import db_password, db_name
 
 
 
@@ -12,7 +13,7 @@ app = FastAPI()
 
 while True:
     try:
-        connection = psycopg2.connect(user="postgres", host="localhost", password="Featherine123", database="fastapi",
+        connection = psycopg2.connect(user="postgres", host="localhost", password=db_password, database=db_name,
                                     cursor_factory=RealDictCursor)
         cursor = connection.cursor()
         print("Database connection established")
