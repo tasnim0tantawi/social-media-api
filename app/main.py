@@ -1,12 +1,25 @@
 from fastapi import FastAPI, status, HTTPException
 from pydantic import BaseModel
 from typing import Optional
-from app.dummy import all_posts, search_post, search_post_index
+from app.for_reference.dummy import all_posts, search_post, search_post_index
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
 from . secret import db_password, db_name
+from . import models
+from . database import engine, SessionLocal
 
+
+
+models.Base.metadata.create_all(bind=engine)
+
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 app = FastAPI()

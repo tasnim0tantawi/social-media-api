@@ -1,7 +1,7 @@
 from fastapi import FastAPI, status, HTTPException
 from pydantic import BaseModel
 from typing import Optional
-from app.dummy import all_posts, search_post, search_post_index
+from app.for_reference.dummy import all_posts, search_post, search_post_index
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time

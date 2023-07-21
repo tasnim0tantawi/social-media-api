@@ -7,4 +7,5 @@ from .secret import db_password, db_name
 SQLALCHEMY_DATABASE_URL = f"postgresql://postgres:{db_password}@localhost/{db_name}"
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
-session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
