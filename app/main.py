@@ -1,6 +1,6 @@
 from fastapi import FastAPI, status, HTTPException
-from pydantic import BaseModel
-from typing import Optional
+from .schemas import Post, PostResponse
+from typing import Optional, List
 from app.for_reference.dummy import all_posts, search_post, search_post_index
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -33,11 +33,6 @@ while True:
 
 
 
-# Creating a schema (base model) for posts using pydantic
-class Post(BaseModel):
-    title: str
-    content: str
-    published: bool = True
 
 # The function root gets called when the user visits the root of the API.
 @app.get("/")
@@ -51,36 +46,31 @@ def get_posts(db: Session = Depends(get_db)):
     # cursor.execute("SELECT * FROM posts")
     # posts = cursor.fetchall()
     posts = db.query(models.Post).all()
-    return {
-        "data": posts
-    }
+    return posts
+    
 
 @app.get("/posts/{id}")
-def get_post(id: int, db: Session = Depends(get_db)):
+def get_post(id: int, db: Session = Depends(get_db), response_model=PostResponse):
     # cursor.execute("SELECT * FROM posts  WHERE id = %s", (str(id),))
     # post = cursor.fetchone()
     post = db.query(models.Post).filter(models.Post.id == id).first()
 
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found.")
-    return {
-        "data": post
-    }
+    return post
+    
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_post(post: Post, db: Session = Depends(get_db)):
+def create_post(post: Post, db: Session = Depends(get_db), response_model=PostResponse):
     post = models.Post(title=post.title, content=post.content, published=post.published)
     db.add(post)
     db.commit()
     db.refresh(post)
     
-    return {
-        "message": "Post created successfully.",
-        "data": post
-    }
+    return  post
 
 @app.put("/posts/{id}")
-def update_post(id: int, post: Post, db: Session = Depends(get_db)):
+def update_post(id: int, post: Post, db: Session = Depends(get_db), response_model=PostResponse):
     # cursor.execute("UPDATE posts SET title = %s, content = %s, published=%s WHERE id = %s RETURNING *", (post.title, post.content,post.published, str(id)))
     # updated_post = cursor.fetchone()
     # connection.commit()
@@ -94,10 +84,7 @@ def update_post(id: int, post: Post, db: Session = Depends(get_db)):
     db.refresh(updated_post)
     updated_post = query.first()
     
-    return {
-        "message": "Post updated successfully.",
-        "data": updated_post
-    }
+    return updated_post
 
 
 
@@ -114,5 +101,8 @@ def delete_post(id: int, db: Session = Depends(get_db)):
     db.commit()
 
 
+@app.post("/users", status_code=status.HTTP_201_CREATED)
+def create_user(db: Session = Depends(get_db)):
+    pass
 
 
