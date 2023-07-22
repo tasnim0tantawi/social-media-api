@@ -1,17 +1,16 @@
 from fastapi import FastAPI, status, HTTPException
-from .schemas import Post, PostResponse
 from typing import Optional, List
 from app.for_reference.dummy import all_posts, search_post, search_post_index
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
 from . secret import db_password, db_name
-from . import models
+from . import models, schemas
 from . database import engine, get_db
 from sqlalchemy.orm import Session
 # import Depends
 from fastapi import Depends
-
+import utils
 
 
 
@@ -41,7 +40,7 @@ def root():
 
 
 # Getting all posts, a best practice is to name the route /posts with an s at the end.
-@app.get("/posts")
+@app.get("/posts", response_model=List[schemas.PostResponse])
 def get_posts(db: Session = Depends(get_db)):
     # cursor.execute("SELECT * FROM posts")
     # posts = cursor.fetchall()
@@ -49,8 +48,8 @@ def get_posts(db: Session = Depends(get_db)):
     return posts
     
 
-@app.get("/posts/{id}")
-def get_post(id: int, db: Session = Depends(get_db), response_model=PostResponse):
+@app.get("/posts/{id}", response_model=schemas.PostResponse)
+def get_post(id: int, db: Session = Depends(get_db)):
     # cursor.execute("SELECT * FROM posts  WHERE id = %s", (str(id),))
     # post = cursor.fetchone()
     post = db.query(models.Post).filter(models.Post.id == id).first()
@@ -60,8 +59,8 @@ def get_post(id: int, db: Session = Depends(get_db), response_model=PostResponse
     return post
     
 
-@app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_post(post: Post, db: Session = Depends(get_db), response_model=PostResponse):
+@app.post("/posts", status_code=status.HTTP_201_CREATED,  response_model=schemas.PostResponse)
+def create_post(post: schemas.Post, db: Session = Depends(get_db)):
     post = models.Post(title=post.title, content=post.content, published=post.published)
     db.add(post)
     db.commit()
@@ -69,8 +68,8 @@ def create_post(post: Post, db: Session = Depends(get_db), response_model=PostRe
     
     return  post
 
-@app.put("/posts/{id}")
-def update_post(id: int, post: Post, db: Session = Depends(get_db), response_model=PostResponse):
+@app.put("/posts/{id}", response_model=schemas.PostResponse)
+def update_post(id: int, post: schemas.Post, db: Session = Depends(get_db)):
     # cursor.execute("UPDATE posts SET title = %s, content = %s, published=%s WHERE id = %s RETURNING *", (post.title, post.content,post.published, str(id)))
     # updated_post = cursor.fetchone()
     # connection.commit()
@@ -87,7 +86,6 @@ def update_post(id: int, post: Post, db: Session = Depends(get_db), response_mod
     return updated_post
 
 
-
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int, db: Session = Depends(get_db)):
     # cursor.execute("DELETE FROM posts WHERE id = %s", (str(id),))
@@ -102,7 +100,21 @@ def delete_post(id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/users", status_code=status.HTTP_201_CREATED)
-def create_user(db: Session = Depends(get_db)):
-    pass
+def create_user( user:schemas.UserCreate, db: Session = Depends(get_db)):
 
+    hashed_password = utils.hash_password(user.password)
+    user = models.User(username=user.username, password=hashed_password, email=user.email)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@app.get("/users/{id}", response_model=schemas.UserResponse)
+def get_user(id: int, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == id).first()
+
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+    return user
 
