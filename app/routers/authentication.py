@@ -1,13 +1,15 @@
 from fastapi import Depends, HTTPException, status, APIRouter
 from sqlalchemy.orm import Session
-from ... import schemas, models
+from .. import schemas, models
 from ..database import get_db
+from .. import oauth2
 
 router = APIRouter(
     prefix="/auth",
     tags=["Authentication"],
     responses={404: {"description": "Not found"}},
 )
+
 
 @router.post("/login")
 def login(user_credentials: schemas.UserLogin, db: Session = Depends(get_db)):
@@ -20,5 +22,4 @@ def login(user_credentials: schemas.UserLogin, db: Session = Depends(get_db)):
     
     # Create access JWT token for user if the user is valid
 
-
-    return {"message": "Login"}
+    return oauth2.create_access_token(data={"sub": user.email})
