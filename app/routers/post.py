@@ -5,11 +5,15 @@ from ..database import get_db
 from typing import List
 
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/posts",
+    tags=["Posts"],
+    responses={404: {"description": "Not found"}},
+)
 app = FastAPI()
 
 # Getting all posts, a best practice is to name the route /posts with an s at the end.
-@router.get("/posts", response_model=List[schemas.PostResponse])
+@router.get("/", response_model=List[schemas.PostResponse])
 def get_posts(db: Session = Depends(get_db)):
     # cursor.execute("SELECT * FROM posts")
     # posts = cursor.fetchall()
@@ -17,7 +21,7 @@ def get_posts(db: Session = Depends(get_db)):
     return posts
     
 
-@router.get("/posts/{id}", response_model=schemas.PostResponse)
+@router.get("/{id}", response_model=schemas.PostResponse)
 def get_post(id: int, db: Session = Depends(get_db)):
     # cursor.execute("SELECT * FROM posts  WHERE id = %s", (str(id),))
     # post = cursor.fetchone()
@@ -28,7 +32,7 @@ def get_post(id: int, db: Session = Depends(get_db)):
     return post
     
 
-@router.post("/posts", status_code=status.HTTP_201_CREATED,  response_model=schemas.PostResponse)
+@router.post("/", status_code=status.HTTP_201_CREATED,  response_model=schemas.PostResponse)
 def create_post(post: schemas.Post, db: Session = Depends(get_db)):
     post = models.Post(title=post.title, content=post.content, published=post.published)
     db.add(post)
@@ -37,7 +41,7 @@ def create_post(post: schemas.Post, db: Session = Depends(get_db)):
     
     return  post
 
-@router.put("/posts/{id}", response_model=schemas.PostResponse)
+@router.put("/{id}", response_model=schemas.PostResponse)
 def update_post(id: int, post: schemas.Post, db: Session = Depends(get_db)):
     # cursor.execute("UPDATE posts SET title = %s, content = %s, published=%s WHERE id = %s RETURNING *", (post.title, post.content,post.published, str(id)))
     # updated_post = cursor.fetchone()
@@ -55,7 +59,7 @@ def update_post(id: int, post: schemas.Post, db: Session = Depends(get_db)):
     return updated_post
 
 
-@router.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int, db: Session = Depends(get_db)):
     # cursor.execute("DELETE FROM posts WHERE id = %s", (str(id),))
     # connection.commit()
