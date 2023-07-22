@@ -6,7 +6,7 @@ import time
 from . secret import db_password, db_name
 from . import models, schemas
 from . database import engine, get_db
-from . routers import post, user
+from . routers import post, user, authentication
 
 
 
@@ -35,6 +35,7 @@ def root():
 
 app.include_router(post.router)
 app.include_router(user.router)
+app.include_router(authentication.router)
 
 
 
