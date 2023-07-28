@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from .. import schemas, models
 from ..database import get_db
 from typing import List
+from .. import oauth2
 
 
 router = APIRouter(
@@ -22,7 +23,7 @@ def get_posts(db: Session = Depends(get_db)):
     
 
 @router.get("/{id}", response_model=schemas.PostResponse)
-def get_post(id: int, db: Session = Depends(get_db)):
+def get_post(id: int, db: Session = Depends(get_db), user_id:int = Depends(oauth2.get_current_user)):
     # cursor.execute("SELECT * FROM posts  WHERE id = %s", (str(id),))
     # post = cursor.fetchone()
     post = db.query(models.Post).filter(models.Post.id == id).first()
@@ -33,7 +34,8 @@ def get_post(id: int, db: Session = Depends(get_db)):
     
 
 @router.post("/", status_code=status.HTTP_201_CREATED,  response_model=schemas.PostResponse)
-def create_post(post: schemas.Post, db: Session = Depends(get_db)):
+def create_post(post: schemas.Post, db: Session = Depends(get_db),
+                user_id:int = Depends(oauth2.get_current_user)):
     post = models.Post(title=post.title, content=post.content, published=post.published)
     db.add(post)
     db.commit()
@@ -42,7 +44,7 @@ def create_post(post: schemas.Post, db: Session = Depends(get_db)):
     return  post
 
 @router.put("/{id}", response_model=schemas.PostResponse)
-def update_post(id: int, post: schemas.Post, db: Session = Depends(get_db)):
+def update_post(id: int, post: schemas.Post, db: Session = Depends(get_db), user_id:int = Depends(oauth2.get_current_user)):
     # cursor.execute("UPDATE posts SET title = %s, content = %s, published=%s WHERE id = %s RETURNING *", (post.title, post.content,post.published, str(id)))
     # updated_post = cursor.fetchone()
     # connection.commit()
@@ -60,7 +62,8 @@ def update_post(id: int, post: schemas.Post, db: Session = Depends(get_db)):
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int, db: Session = Depends(get_db)):
+def delete_post(id: int, db: Session = Depends(get_db), 
+                 user_id:int = Depends(oauth2.get_current_user)):
     # cursor.execute("DELETE FROM posts WHERE id = %s", (str(id),))
     # connection.commit()
     # deleted_post = cursor.fetchone()
