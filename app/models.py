@@ -28,4 +28,13 @@ class User(Base):
     name = Column(String, nullable=False)
 
 
+class Reaction(Base):
+    __tablename__ = "reactions"
+    post_id = Column(Integer, ForeignKey('posts.id', ondelete='CASCADE'), nullable=False, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, primary_key=True)
+    reaction_type = Column(String, nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=text('NOW()'))
+    post = relationship("Post")
+    user = relationship("User")
+
 

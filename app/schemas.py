@@ -3,7 +3,6 @@ from datetime import datetime
 
 
 
-
 class UserCreate(BaseModel):
     password: str
     email: EmailStr
@@ -27,6 +26,11 @@ class Token(BaseModel):
     
 class TokenData(BaseModel):
     user_id: int = None
+
+class Reaction(BaseModel):
+    reaction_type: str = "like"
+    post_id: int
+    direction: conit(str, ge=0, le=1) = 0
 
 
 
