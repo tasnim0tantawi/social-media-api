@@ -5,7 +5,7 @@ from datetime import datetime
 class PostBase(BaseModel):
     title: str
     content: str
-    published: bool = True
+    visibility: str = "public"
 
 
 # Creating a schema (base model) for posts using pydantic

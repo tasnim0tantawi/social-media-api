@@ -18,15 +18,30 @@ app = FastAPI()
 def get_posts(db: Session = Depends(get_db)):
     # cursor.execute("SELECT * FROM posts")
     # posts = cursor.fetchall()
-    posts = db.query(models.Post).all()
-    return posts
+
+    posts = db.query(models.Post).filter(models.Post.visibility == "public").all()
+    if posts is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No posts found.")
     
+    return posts
+
+@router.get("/my_posts", response_model=List[schemas.PostResponse])
+def get_my_posts(db: Session = Depends(get_db), current_user = Depends(oauth2.get_current_user)):
+
+    posts = db.query(models.Post).filter(models.Post.user_id == current_user.id).all()
+    if posts is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No posts found.")
+    
+    return posts    
 
 @router.get("/{id}", response_model=schemas.PostResponse)
 def get_post(id: int, db: Session = Depends(get_db), current_user = Depends(oauth2.get_current_user)):
     # cursor.execute("SELECT * FROM posts  WHERE id = %s", (str(id),))
     # post = cursor.fetchone()
     post = db.query(models.Post).filter(models.Post.id == id).first()
+
+    if post.visibility == "private" and post.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to view this post.")
 
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found.")
@@ -36,7 +51,7 @@ def get_post(id: int, db: Session = Depends(get_db), current_user = Depends(oaut
 @router.post("/", status_code=status.HTTP_201_CREATED,  response_model=schemas.PostResponse)
 def create_post(post: schemas.Post, db: Session = Depends(get_db),
             current_user:schemas.UserResponse = Depends(oauth2.get_current_user)):
-    post = models.Post(title=post.title, content=post.content, published=post.published, user_id=current_user.id)
+    post = models.Post(title=post.title, content=post.content, visibility= post.visibility, user_id=current_user.id)
     db.add(post)
     db.commit()
     db.refresh(post)

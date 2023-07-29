@@ -15,6 +15,7 @@ class Post(Base):
     published = Column(Boolean, server_default='TRUE')
     created_at = Column(TIMESTAMP(timezone=True), server_default=text('NOW()'))
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    visibility = Column(String, nullable=False, server_default='public')
 
 
 class User(Base):
