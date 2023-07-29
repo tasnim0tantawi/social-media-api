@@ -23,7 +23,7 @@ def get_posts(db: Session = Depends(get_db)):
     
 
 @router.get("/{id}", response_model=schemas.PostResponse)
-def get_post(id: int, db: Session = Depends(get_db), user_id:int = Depends(oauth2.get_current_user)):
+def get_post(id: int, db: Session = Depends(get_db), current_user = Depends(oauth2.get_current_user)):
     # cursor.execute("SELECT * FROM posts  WHERE id = %s", (str(id),))
     # post = cursor.fetchone()
     post = db.query(models.Post).filter(models.Post.id == id).first()
@@ -35,8 +35,8 @@ def get_post(id: int, db: Session = Depends(get_db), user_id:int = Depends(oauth
 
 @router.post("/", status_code=status.HTTP_201_CREATED,  response_model=schemas.PostResponse)
 def create_post(post: schemas.Post, db: Session = Depends(get_db),
-                user_id:int = Depends(oauth2.get_current_user)):
-    post = models.Post(title=post.title, content=post.content, published=post.published)
+            current_user:schemas.UserResponse = Depends(oauth2.get_current_user)):
+    post = models.Post(title=post.title, content=post.content, published=post.published, user_id=current_user.id)
     db.add(post)
     db.commit()
     db.refresh(post)
@@ -44,7 +44,7 @@ def create_post(post: schemas.Post, db: Session = Depends(get_db),
     return  post
 
 @router.put("/{id}", response_model=schemas.PostResponse)
-def update_post(id: int, post: schemas.Post, db: Session = Depends(get_db), user_id:int = Depends(oauth2.get_current_user)):
+def update_post(id: int, post: schemas.Post, db: Session = Depends(get_db), current_user:schemas.UserResponse = Depends(oauth2.get_current_user)):
     # cursor.execute("UPDATE posts SET title = %s, content = %s, published=%s WHERE id = %s RETURNING *", (post.title, post.content,post.published, str(id)))
     # updated_post = cursor.fetchone()
     # connection.commit()
@@ -53,6 +53,10 @@ def update_post(id: int, post: schemas.Post, db: Session = Depends(get_db), user
     updated_post = query.first()
     if updated_post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found.")
+    
+    if updated_post.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to update this post.")
+    
     query.update(post.dict())
     db.commit()
     db.refresh(updated_post)
@@ -71,5 +75,9 @@ def delete_post(id: int, db: Session = Depends(get_db),
     
     if query.first() == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found.")
+    
+    if query.first().user_id != user_id.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to delete this post.")
+    
     query.delete(synchronize_session=False)
     db.commit()

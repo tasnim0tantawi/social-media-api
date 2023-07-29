@@ -3,6 +3,7 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime
 import datetime
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
+from sqlalchemy.sql.schema import ForeignKey
 
 
 class Post(Base):
@@ -13,6 +14,7 @@ class Post(Base):
     content = Column(String, nullable=False)
     published = Column(Boolean, server_default='TRUE')
     created_at = Column(TIMESTAMP(timezone=True), server_default=text('NOW()'))
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
 
 
 class User(Base):
