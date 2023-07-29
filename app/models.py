@@ -4,6 +4,7 @@ from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.schema import ForeignKey
 from sqlalchemy.orm import relationship
+from pydantic.types import conint
 
 
 class Post(Base):

@@ -13,13 +13,16 @@ router = APIRouter(
 )
 
 @router.post("/{id}", status_code=status.HTTP_201_CREATED)
-def create_reaction(id: int, reaction: str, db: Session = Depends(get_db),
+def create_reaction(id: int, reaction: schemas.Reaction, db: Session = Depends(get_db),
             current_user:schemas.UserResponse = Depends(oauth2.get_current_user)):
-    post = db.query(models.Post).filter(models.Post.id == id).first()
-    if post is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found.")
-    reaction = models.Reaction(post_id=id, user_id=current_user.id, reaction_type=reaction)
-    db.add(reaction)
-    db.commit()
-    db.refresh(reaction)
-    return reaction
+    
+    reaction = db.query(models.Reaction).filter(models.Reaction.post_id == reaction.post_id, models.Reaction.user_id == current_user.id).first()
+    if(reaction.direction == 1):
+        if reaction:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="You already reacted to this post.")
+        
+        new_reaction = models.Reaction(post_id=reaction.post_id, user_id=current_user.id, reaction_type=reaction.reaction_type, direction=reaction.direction)
+        db.add(new_reaction)
+        db.commit()
+        db.refresh(new_reaction)
+        return reaction

@@ -1,5 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
+from pydantic.types import conint
 
 
 
@@ -30,7 +31,7 @@ class TokenData(BaseModel):
 class Reaction(BaseModel):
     reaction_type: str = "like"
     post_id: int
-    direction: conit(str, ge=0, le=1) = 0
+    direction: conint(ge=0, le=1)
 
 
 
