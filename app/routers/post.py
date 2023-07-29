@@ -25,7 +25,7 @@ def get_posts(db: Session = Depends(get_db)):
     
     return posts
 
-@router.get("/my_posts", response_model=List[schemas.PostResponse])
+@router.get("/myposts", response_model=List[schemas.PostResponse])
 def get_my_posts(db: Session = Depends(get_db), current_user = Depends(oauth2.get_current_user)):
 
     posts = db.query(models.Post).filter(models.Post.user_id == current_user.id).all()

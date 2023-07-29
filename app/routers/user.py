@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException, status, FastAPI
 from sqlalchemy.orm import Session
 from .. import schemas, models, utils
 from ..database import get_db
-from typing import List
 
 # We use the APIRouter class to create a router, and then we can add our paths to it with the decorator syntax.
 router = APIRouter(
@@ -18,7 +17,7 @@ router = APIRouter(
 def create_user( user:schemas.UserCreate, db: Session = Depends(get_db)):
 
     hashed_password = utils.hash_password(user.password)
-    user = models.User(password=hashed_password, email=user.email)
+    user = models.User(password=hashed_password, email=user.email, name = user.name)
     db.add(user)
     db.commit()
     db.refresh(user)

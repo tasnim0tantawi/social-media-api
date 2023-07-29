@@ -14,19 +14,6 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-while True:
-    try:
-        connection = psycopg2.connect(user="postgres", host="localhost", password=db_password, database=db_name,
-                                    cursor_factory=RealDictCursor)
-        cursor = connection.cursor()
-        print("Database connection established")
-        break
-
-    except Exception as error:
-        print("Error while connecting to PostgreSQL", error)
-        time.sleep(5)
-
-
 
 # The function root gets called when the user visits the root of the API.
 @app.get("/")
