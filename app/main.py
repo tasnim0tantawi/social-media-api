@@ -1,13 +1,7 @@
 from fastapi import FastAPI
-from app.for_reference.dummy import all_posts, search_post, search_post_index
-import psycopg2
-from psycopg2.extras import RealDictCursor
-import time
-from . secret import db_password, db_name
-from . import models, schemas
-from . database import engine, get_db
+from . import models
+from . database import engine
 from . routers import post, user, authentication
-
 
 
 models.Base.metadata.create_all(bind=engine)
