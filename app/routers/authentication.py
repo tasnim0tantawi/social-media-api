@@ -6,8 +6,6 @@ from ..database import get_db
 from .. import oauth2, utils
 
 
-
-
 router = APIRouter(
     prefix="/auth",
     tags=["Authentication"],

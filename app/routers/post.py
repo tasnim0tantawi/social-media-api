@@ -15,11 +15,14 @@ app = FastAPI()
 
 # Getting all posts, a best practice is to name the route /posts with an s at the end.
 @router.get("/", response_model=List[schemas.PostResponse])
-def get_posts(db: Session = Depends(get_db)):
+def get_posts(db: Session = Depends(get_db), limit: int = 100, skip: int = 0, search: str = None):
     # cursor.execute("SELECT * FROM posts")
     # posts = cursor.fetchall()
 
-    posts = db.query(models.Post).filter(models.Post.visibility == "public").all()
+    posts = db.query(models.Post).filter(models.Post.visibility == "public").limit(limit).offset(skip).all()
+    if search:
+        posts = db.query(models.Post).filter(models.Post.title.ilike(f"%{search}%")).limit(limit).offset(skip).all()
+
     if posts is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No posts found.")
     
