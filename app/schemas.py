@@ -8,6 +8,7 @@ class UserCreate(BaseModel):
     password: str
     email: EmailStr
     name: str
+    
 
 class UserResponse(BaseModel):
     created_at: datetime
