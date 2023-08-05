@@ -21,19 +21,20 @@ def get_posts(db: Session = Depends(get_db), limit: int = 100, skip: int = 0, se
     # cursor.execute("SELECT * FROM posts")
     # posts = cursor.fetchall()
 
-    posts = db.query(models.Post).filter(models.Post.visibility == "public").limit(limit).offset(skip).all()
+    # posts = db.query(models.Post).filter(models.Post.visibility == "public").limit(limit).offset(skip).all()
+
+    posts = db.query(models.Post, func.count(models.Reaction.post_id).label('reactions')).join(models.Reaction, 
+                models.Post.id == models.Reaction.post_id, isouter=True).filter(models.Post.visibility == "public").group_by(models.Post.id).limit(limit).offset(skip).all()
     if search:
-        posts = db.query(models.Post).filter(models.Post.title.ilike(f"%{search}%")).limit(limit).offset(skip).all()
+        posts = db.query(models.Post, func.count(models.Reaction.post_id).label('reactions')).join(models.Reaction, 
+                models.Post.id == models.Reaction.post_id, isouter=True).filter(models.Post.visibility == "public").filter(models.Post.title.ilike(f"%{search}%")).group_by(models.Post.id).limit(limit).offset(skip).all()
 
     if posts is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No posts found.")
     
-    results = db.query(models.Post, func.count(models.Reaction.post_id).label('reactions')).join(models.Reaction, 
-                models.Post.id == models.Reaction.post_id, isouter=True).filter(models.Post.visibility == "public").group_by(models.Post.id).limit(limit).offset(skip).all()
+  
     
-    
-    
-    return results
+    return posts
 
 
 
