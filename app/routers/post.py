@@ -4,7 +4,7 @@ from .. import schemas, models
 from ..database import get_db
 from typing import List
 from .. import oauth2
-
+from sqlalchemy import func
 
 router = APIRouter(
     prefix="/posts",
@@ -12,6 +12,8 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 app = FastAPI()
+
+
 
 # Getting all posts, a best practice is to name the route /posts with an s at the end.
 @router.get("/", response_model=List[schemas.PostResponse])
@@ -26,7 +28,11 @@ def get_posts(db: Session = Depends(get_db), limit: int = 100, skip: int = 0, se
     if posts is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No posts found.")
     
-    return posts
+    results = db.query(models.Post, func.count(models.Reaction.post_id).label('reactions')).outerjoin(models.Reaction).group_by(models.Post.id).all()
+    
+    return results
+
+
 
 @router.get("/myposts", response_model=List[schemas.PostResponse])
 def get_my_posts(db: Session = Depends(get_db), current_user = Depends(oauth2.get_current_user)):
@@ -36,6 +42,8 @@ def get_my_posts(db: Session = Depends(get_db), current_user = Depends(oauth2.ge
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No posts found.")
     
     return posts    
+
+
 
 @router.get("/{id}", response_model=schemas.PostResponse)
 def get_post(id: int, db: Session = Depends(get_db), current_user = Depends(oauth2.get_current_user)):
@@ -49,6 +57,7 @@ def get_post(id: int, db: Session = Depends(get_db), current_user = Depends(oaut
     if post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found.")
     return post
+
     
 
 @router.post("/", status_code=status.HTTP_201_CREATED,  response_model=schemas.PostResponse)

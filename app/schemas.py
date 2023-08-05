@@ -45,13 +45,15 @@ class PostBase(BaseModel):
 
 # Creating a schema (base model) for posts using pydantic
 class Post(PostBase):
-    pass
-
-
-class PostResponse(PostBase):
     created_at: datetime
     user_id: int
 
+    class Config:
+        orm_mode = True
+
+class PostResponse(Post):
+    Post: Post
+    reactions: int
 
     class Config:
         orm_mode = True
