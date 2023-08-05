@@ -28,7 +28,10 @@ def get_posts(db: Session = Depends(get_db), limit: int = 100, skip: int = 0, se
     if posts is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No posts found.")
     
-    results = db.query(models.Post, func.count(models.Reaction.post_id).label('reactions')).outerjoin(models.Reaction).group_by(models.Post.id).all()
+    results = db.query(models.Post, func.count(models.Reaction.post_id).label('reactions')).join(models.Reaction, 
+                models.Post.id == models.Reaction.post_id, isouter=True).filter(models.Post.visibility == "public").group_by(models.Post.id).limit(limit).offset(skip).all()
+    
+    
     
     return results
 
@@ -58,7 +61,7 @@ def get_post(id: int, db: Session = Depends(get_db), current_user = Depends(oaut
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found.")
     return post
 
-    
+
 
 @router.post("/", status_code=status.HTTP_201_CREATED,  response_model=schemas.PostResponse)
 def create_post(post: schemas.Post, db: Session = Depends(get_db),

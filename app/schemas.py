@@ -34,6 +34,9 @@ class Reaction(BaseModel):
     post_id: int
     direction: conint(ge=0, le=1)
 
+    class Config:
+        orm_mode = True
+
 
 
 
@@ -41,6 +44,9 @@ class PostBase(BaseModel):
     title: str
     content: str
     visibility: str = "public"
+
+    class Config:
+        orm_mode = True
 
 
 # Creating a schema (base model) for posts using pydantic
@@ -51,7 +57,7 @@ class Post(PostBase):
     class Config:
         orm_mode = True
 
-class PostResponse(Post):
+class PostResponse(BaseModel):
     Post: Post
     reactions: int
 
