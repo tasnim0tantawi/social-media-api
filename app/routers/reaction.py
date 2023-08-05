@@ -12,17 +12,27 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-@router.post("/{id}", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 def create_reaction(id: int, reaction: schemas.Reaction, db: Session = Depends(get_db),
             current_user:schemas.UserResponse = Depends(oauth2.get_current_user)):
     
-    reaction = db.query(models.Reaction).filter(models.Reaction.post_id == reaction.post_id, models.Reaction.user_id == current_user.id).first()
+    reaction_query = db.query(models.Reaction).filter(models.Reaction.post_id == reaction.post_id, models.Reaction.user_id == current_user.id)
+    reaction = reaction_query.first()
     if(reaction.direction == 1):
         if reaction:
+            # User already reacted to this post
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="You already reacted to this post.")
         
         new_reaction = models.Reaction(post_id=reaction.post_id, user_id=current_user.id, reaction_type=reaction.reaction_type, direction=reaction.direction)
         db.add(new_reaction)
         db.commit()
         db.refresh(new_reaction)
-        return reaction
+        return {"message": "Reaction created successfully."}
+    else:
+        if not reaction: 
+            # User did not react to this post
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="You did not react to this post to unlike it.")
+        
+        db.delete(reaction)
+        db.commit()
+        return {"message": "Reaction deleted successfully."}
